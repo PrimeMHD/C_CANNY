@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # # img=cv2.imread("Imgs/duck.png")
 
     # print(img.shape)
-    # np.savetxt('../Imgs/duck.txt', img.flatten(), fmt='%.6f')
+    # np.savetxt('../Imgs/duck.txt', img.flatten(), fmt='%d')
 
     # img=cv2.resize(img,(300,300))
     # cv2.imwrite('duck_small.png',img)
@@ -28,6 +28,8 @@ if __name__ == '__main__':
     # print(r.shape)
     # cv2.imshow("original", img)
     # cv2.imshow("result", r)
+    show_blured_img("Imgs/duck.txt")
     show_blured_img("Imgs/duck_blured_gradient.txt")
+    show_blured_img("Imgs/duck_blured.txt")
 
 

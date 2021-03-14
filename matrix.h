@@ -221,8 +221,8 @@ T* mat_add(const T* const m1, const T* const m2, int row1, int col1, int row2, i
 
 
 
-template <class T>
-T* mat_conv(const T* const m1, const T* const m2, const int row1, const int col1, const int row2, const int col2, const int padding, const int strides){
+template <class T1, class T2>
+T2* mat_conv(const T1* const m1, const T2* const m2, const int row1, const int col1, const int row2, const int col2, const int padding, const int strides){
     /********************************
     Args:
         T* m1: conv filters
@@ -244,14 +244,14 @@ T* mat_conv(const T* const m1, const T* const m2, const int row1, const int col1
     const int V = col1;
     const int M = row2;
     const int N = col2;
-    const T* const W=m1;
-    const T* const X=m2;
+    const T1* const W=m1;
+    const T2* const X=m2;
     //change the name 
 
 
     const int out_row=(M+2*padding-U)/strides+1;
     const int out_col=(N+2*padding-V)/strides+1;  //Round down
-    T* out=new T[out_row*out_col]();  //Note that brackets is necessary, otherwise it will not be initialized to 0
+    T2* out=new T2[out_row*out_col]();  //Note that brackets is necessary, otherwise it will not be initialized to 0
 
 
     //i，j is the subscript of the out element
@@ -267,7 +267,7 @@ T* mat_conv(const T* const m1, const T* const m2, const int row1, const int col1
 
  
 
-                    T temp2;
+                    T2 temp2;
                     if(window_r+u<0||window_r+u>=M||window_c+v<0||window_c+v>=N){//if falls in to padding area 
                         temp2=0;
                     }else{

@@ -8,9 +8,9 @@ using namespace std;
 int main(int argc, char*argv[]){
     //load an image 
     const int IMG_CHANNEL=1, IMG_HEIGHT=300, IMG_WEIGHT=300;
-    float *img=new float[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
-    float *processed_img=new float[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
-    float *pixel_gradients=new float[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
+    int *img=new int[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
+    int *processed_img=new int[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
+    int *pixel_gradients=new int[IMG_CHANNEL*IMG_HEIGHT*IMG_WEIGHT]();
     ifstream ifs;
     ofstream ofs;
     ifs.open("./Imgs/duck.txt",ios::in);
