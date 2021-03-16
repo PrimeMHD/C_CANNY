@@ -8,7 +8,7 @@ def show_blured_img(path):
     # blured=np.transpose(blured, (1,2,0))
     blured=blured.astype(np.uint8)
     print(blured)
-    cv2.imshow("blured c", blured)
+    cv2.imshow(path, blured)
     cv2.waitKey()
     cv2.destroyAllWindows()
 
@@ -28,8 +28,12 @@ if __name__ == '__main__':
     # print(r.shape)
     # cv2.imshow("original", img)
     # cv2.imshow("result", r)
-    show_blured_img("Imgs/duck.txt")
-    show_blured_img("Imgs/duck_blured_gradient.txt")
-    show_blured_img("Imgs/duck_blured.txt")
+    # show_blured_img("Imgs/duck.txt")
+    # show_blured_img("Imgs/duck_blured.txt")
+    # show_blured_img("Imgs/duck_blured_gradient.txt")
+    show_blured_img("Imgs/duck_blured_gradient_sup.txt")
+    show_blured_img("Imgs/duck_blured_gradient_sup_rmweak.txt")
+    
+
 
 

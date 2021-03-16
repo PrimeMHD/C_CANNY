@@ -53,7 +53,7 @@ int gaussian_filter(const int* img, int *result, int filter_n, int img_c, int im
     return 0;
 }
 
-int pixelGradient(const int* img, int *result, int img_c, int img_h, int img_w){
+int pixelGradient(const int* img, int *gx, int *gy, int *result, int img_c, int img_h, int img_w){
     int kernel_gx[9]{-1,0,1,-2,0,2,-1,0,1};
     int kernel_gy[9]{-1,-2,-1,0,0,0,1,2,1};
     int* gx_conved=new int[img_c*img_h*img_w]();
@@ -83,9 +83,15 @@ int pixelGradient(const int* img, int *result, int img_c, int img_h, int img_w){
 
 int pixelGradientSuppression(int* gradient, int* gradient_x, int* gradient_y, int* suppressed_gradient, int channel, int height, int width){
     for(int ch_i=0; ch_i<channel; ch_i++){
-        for(int h_i=1; h_i<height-1; h_i++){
-            for(int w_i=1; w_i<width-1; w_i++){
+        for(int h_i=0; h_i<height; h_i++){
+            for(int w_i=0; w_i<width; w_i++){
                 //skip image edge
+                if(h_i==0||h_i==height-1||w_i==0||w_i==width-1){
+                    suppressed_gradient[ch_i*height*width+h_i*width+w_i]=gradient[ch_i*height*width+h_i*width+w_i];
+                    continue;
+                }
+
+
                 int gradient_val=gradient[ch_i*height*width+h_i*width+w_i];
                 int gradient_val_x=gradient_x[ch_i*height*width+h_i*width+w_i];
                 int gradient_val_y=gradient_y[ch_i*height*width+h_i*width+w_i];
@@ -113,12 +119,14 @@ int pixelGradientSuppression(int* gradient, int* gradient_x, int* gradient_y, in
                         gup_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+h_i*width+w_i+1]+abs_tan_g*gradient[ch_i*height*width+(h_i-1)*width+w_i+1];
                         gdown_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+h_i*width+w_i-1]+abs_tan_g*gradient[ch_i*height*width+(h_i+1)*width+w_i-1];
                     }else if(tan_g>=1){ //region 2
-                        // gup_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+h_i*width+w_i+1]+abs_tan_g*gradient[ch_i*height*width+(h_i-1)*width+w_i+1];
-                        // gdown_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+h_i*width+w_i-1]+abs_tan_g*gradient[ch_i*height*width+(h_i+1)*width+w_i-1];
+                        gup_interpolation=(1-1/abs_tan_g)*gradient[ch_i*height*width+(h_i-1)*width+w_i+1]+(1/abs_tan_g)*gradient[ch_i*height*width+(h_i-1)*width+w_i];
+                        gdown_interpolation=(1-1/abs_tan_g)*gradient[ch_i*height*width+(h_i+1)*width+w_i-1]+(1/abs_tan_g)*gradient[ch_i*height*width+(h_i+1)*width+w_i];
                     }else if(tan_g<=-1){ //region 3
-
+                        gup_interpolation=(1-1/abs_tan_g)*gradient[ch_i*height*width+(h_i-1)*width+w_i-1]+(1/abs_tan_g)*gradient[ch_i*height*width+(h_i-1)*width+w_i];
+                        gdown_interpolation=(1-1/abs_tan_g)*gradient[ch_i*height*width+(h_i+1)*width+w_i+1]+(1/abs_tan_g)*gradient[ch_i*height*width+(h_i+1)*width+w_i];
                     }else if(tan_g>-1&&tan_g<0){ //region 4
-
+                        gup_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+(h_i-1)*width+w_i-1]+abs_tan_g*gradient[ch_i*height*width+h_i*width+w_i-1];
+                        gdown_interpolation=(1-abs_tan_g)*gradient[ch_i*height*width+(h_i+1)*width+w_i+1]+abs_tan_g*gradient[ch_i*height*width+h_i*width+w_i+1];
                     }
                 }
 
@@ -135,4 +143,49 @@ int pixelGradientSuppression(int* gradient, int* gradient_x, int* gradient_y, in
         }
     }
     return 0;
+}
+
+int weakEdgeControl(int* suppressed_gradient, int* controlled_edge, int channel, int height, int width, int threshold, int brighter){
+    for(int ch_i=0; ch_i<channel; ch_i++){
+        for(int h_i=0; h_i<height; h_i++){
+            for(int w_i=0; w_i<width; w_i++){
+                //skip image edge
+                if(h_i==0||h_i==height-1||w_i==0||w_i==width-1){
+                    controlled_edge[ch_i*height*width+h_i*width+w_i]=suppressed_gradient[ch_i*height*width+h_i*width+w_i];
+                    continue;
+                }
+
+                if(suppressed_gradient[ch_i*height*width+h_i*width+w_i]>=threshold){
+                    controlled_edge[ch_i*height*width+h_i*width+w_i]=suppressed_gradient[ch_i*height*width+h_i*width+w_i];
+                    continue; //strong edge
+                }
+
+                //weak edge, shoulde judge more
+                int neighbor[9];
+                for(int i=-1; i<=1; i++){
+                    for(int j=-1; j<=1; j++){
+                        neighbor[(i+1)*3+ j+1 ]=suppressed_gradient[ch_i*height*width + (h_i+i)*width+ w_i+j];
+                    }
+                }
+                bool should_enhance=false;
+                for(int i=0; i<9; i++){
+                    if(i==4){
+                        continue;
+                    }
+                    if(neighbor[i]>=threshold){
+                        //if one of his neighbor is strong edge, keep this weak edge
+                        should_enhance=true;
+                    }
+                }
+                if(should_enhance){
+                    controlled_edge[ch_i*height*width+h_i*width+w_i]=suppressed_gradient[ch_i*height*width+h_i*width+w_i];
+                }else{
+                    controlled_edge[ch_i*height*width+h_i*width+w_i]=0;
+                }
+
+
+
+            }
+        }
+    }    
 }
